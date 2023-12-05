@@ -4,21 +4,28 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
+	"log"
 )
+
+type Response struct {
+	Result string          `json:"result"`
+	Data   json.RawMessage `json:"data"`
+	Error  string          `json:"error"`
+}
 
 type Record struct {
 	ID         int64  `json:"-" sql.field:"id"`
-	Name       string `json:"name" sql.field:"name"`
-	LastName   string `json:"last_name" sql.field:"last_name"`
-	MiddleName string `json:"middle_name" sql.field:"middle_name"`
-	Address    string `json:"address" sql.field:"address"`
-	Phone      string `json:"phone" sql.field:"phone"`
+	Name       string `json:"name,omitempty" sql.field:"name"`
+	LastName   string `json:"last_name,omitempty" sql.field:"last_name"`
+	MiddleName string `json:"middle_name,omitempty" sql.field:"middle_name"`
+	Address    string `json:"address,omitempty" sql.field:"address"`
+	Phone      string `json:"phone,omitempty" sql.field:"phone"`
 }
 
 func connentToServer() {
 	for {
-		///// мб здесь сделать проверку доступности сайта
 		var command int
 		fmt.Print("Выберите, что хотите сделать [1 - Создать запись, 2 - Обновить запись, 3 - Найти запись, 4 - Удалить запись]: ")
 		fmt.Scanln(&command)
@@ -105,134 +112,150 @@ func connentToServer() {
 }
 
 func createRecord(rec *Record) {
-	// recordData := map[string]interface{}{
-	// 	"name":        "John",
-	// 	"last_name":   "Doe",
-	// 	"middle_name": "M.",
-	// 	"address":     "123 Main St",
-	// 	"phone":       "+791356640274",
-	// }
-
 	jsonData, err := json.Marshal(rec)
 	if err != nil {
-		fmt.Println("Error encoding JSON:", err)
+		log.Println("Error encoding JSON:", err)
 		return
 	}
 
 	resp, err := http.Post("http://localhost:8080/create", "application/json", bytes.NewBuffer(jsonData))
 	if err != nil {
-		fmt.Println("Error sending POST request:", err)
+		log.Println("Error sending POST request:", err)
 		return
 	}
 	defer resp.Body.Close()
 
+	recordsData := make([]byte, resp.ContentLength) 
+	_, err = io.ReadFull(resp.Body, recordsData)
+	if err != nil {
+		log.Println("io.ReadFull(resp.Body, recordsData):", err)
+		return
+	}
+
 	fmt.Println("Response Status:", resp.Status)
+	var response Response
+	err = json.Unmarshal(recordsData, &response)
+	if err != nil {
+		log.Println("json.Unmarshal(recordsData, &response):", err)
+		return
+	}
+	if response.Result == "Error" {
+		log.Println(response.Error)
+		return
+	}
+	fmt.Println("Record successfully created")
 }
 
 func updateRecord(rec *Record) {
-	// updatedRecordData := map[string]interface{}{
-	// 	"name":        "UpdatedName",
-	// 	"last_name":   "UpdatedLastName",
-	// 	"middle_name": "UpdatedMiddleName",
-	// 	"address":     "UpdatedAddress",
-	// 	"phone":       "79135640274",
-	// }
-
 	jsonData, err := json.Marshal(rec)
 	if err != nil {
-		fmt.Println("Error encoding JSON:", err)
+		log.Println("Error encoding JSON:", err)
 		return
 	}
 
 	resp, err := http.Post("http://localhost:8080/update", "application/json", bytes.NewBuffer(jsonData))
 	if err != nil {
-		fmt.Println("Error sending POST request:", err)
+		log.Println("Error sending POST request:", err)
 		return
 	}
-	// url := fmt.Sprintf("http://localhost:8080/update")
-	// req, err := http.NewRequest("PUT", url, bytes.NewBuffer(jsonData))
-	// if err != nil {
-	// 	fmt.Println("Error creating PUT request:", err)
-	// 	return
-	// }
-
-	// client := http.Client{}
-	// resp, err := client.Do(req)
-	// if err != nil {
-	// 	fmt.Println("Error sending PUT request:", err)
-	// 	return
-	// }
 	defer resp.Body.Close()
+	recordsData := make([]byte, resp.ContentLength) 
+	_, err = io.ReadFull(resp.Body, recordsData)
+	if err != nil {
+		log.Println("io.ReadFull(resp.Body, recordsData):", err)
+		return
+	}
 
 	fmt.Println("Response Status:", resp.Status)
+	var response Response
+	err = json.Unmarshal(recordsData, &response)
+	if err != nil {
+		log.Println("json.Unmarshal(recordsData, &response):", err)
+		return
+	}
+	if response.Result == "Error" {
+		log.Println(response.Error)
+		return
+	}
+	fmt.Println("Record successfully updated")
 }
 
 func deleteRecord(phone []byte) {
 	resp, err := http.Post("http://localhost:8080/delete", "application/text", bytes.NewBuffer(phone))
 	if err != nil {
-		fmt.Println("Error sending POST request:", err)
+		log.Println("Error sending POST request:", err)
 		return
 	}
-	// url := fmt.Sprintf("http://localhost:8080/delete")
-	// phone := "79135640274"
-	// req, err := http.NewRequest("DELETE", url, bytes.NewBuffer([]byte(phone)))
-	// if err != nil {
-	// 	fmt.Println("Error creating DELETE request:", err)
-	// 	return
-	// }
-
-	// client := http.Client{}
-	// resp, err := client.Do(req)
-	// if err != nil {
-	// 	fmt.Println("Error sending DELETE request:", err)
-	// 	return
-	// }
 	defer resp.Body.Close()
 
+	recordsData := make([]byte, resp.ContentLength) 
+	_, err = io.ReadFull(resp.Body, recordsData)
+	if err != nil {
+		log.Println("io.ReadFull(resp.Body, recordsData):", err)
+		return
+	}
+
 	fmt.Println("Response Status:", resp.Status)
+	var response Response
+	err = json.Unmarshal(recordsData, &response)
+	if err != nil {
+		log.Println("json.Unmarshal(recordsData, &response):", err)
+		return
+	}
+	if response.Result == "Error" {
+		log.Println(response.Error)
+		return
+	}
+	fmt.Println("Record successfully deleted")
 }
 
 func getRecords(rec *Record) {
-
-	// jsonData := `{
-	// 	"name":        "UpdatedName",
-	// 	"last_name":   "UpdatedLastName",
-	// 	"middle_name": "",
-	// 	"address":     "",
-	// 	"phone":       ""
-	// }`
-
 	jsonData, err := json.Marshal(rec)
 	if err != nil {
-		fmt.Println("Error encoding JSON:", err)
+		log.Println("Error encoding JSON:", err)
 		return
 	}
-
-	url := "http://localhost:8080/get"
-
-	req, err := http.NewRequest("POST", url, bytes.NewBuffer([]byte(jsonData)))
+	
+	resp, err := http.Post("http://localhost:8080/get", "application/json", bytes.NewBuffer(jsonData))
 	if err != nil {
-		fmt.Println("Error creating POST request:", err)
-		return
-	}
-
-	req.Header.Set("Content-Type", "application/json")
-
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		fmt.Println("Error sending POST request:", err)
+		log.Println("Error sending POST request:", err)
 		return
 	}
 	defer resp.Body.Close()
 
-	var recordsData []map[string]interface{}
-	if err := json.NewDecoder(resp.Body).Decode(&recordsData); err != nil {
-		fmt.Println("Error decoding JSON:", err)
+	recordsData := make([]byte, resp.ContentLength) 
+	_, err = io.ReadFull(resp.Body, recordsData)
+	if err != nil {
+		log.Println("io.ReadFull(resp.Body, recordsData):", err)
 		return
 	}
-
-	fmt.Println("Records:", recordsData) ////////////////// красивый вывод
+	var records []Record
+	var response Response
+	err = json.Unmarshal(recordsData, &response)
+	if err != nil {
+		log.Println("json.Unmarshal(recordsData, &response):", err)
+		return
+	}
+	err = json.Unmarshal(response.Data, &records)
+	if err != nil {
+		log.Println("json.Unmarshal(response.Data, &records):", err)
+		return
+	}
+	if response.Result == "Error" {
+		log.Println(response.Error)
+		return
+	}
+	fmt.Println("Result: ")
+	for _, record := range records {
+		fmt.Println("-->")
+		fmt.Println("\tName:" + record.Name)
+		fmt.Println("\tSurname:" + record.MiddleName)
+		if record.LastName != "" {
+			fmt.Println("\tLastname:" + record.LastName)
+		}
+		fmt.Println("\tAddtess:" + record.Address)
+		fmt.Println("\tPhone number:" + record.Phone)
+	}
 }
 
 func main() {
