@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"net/http"
 	"log"
+	"net/http"
 )
 
 type Response struct {
@@ -40,9 +40,9 @@ func connentToServer() {
 			fmt.Print("Введите имя: ")
 			fmt.Scanln(&rec.Name)
 			fmt.Print("Введите фамилию: ")
-			fmt.Scanln(&rec.MiddleName)
-			fmt.Print("Введите отчество (при наличии): ")
 			fmt.Scanln(&rec.LastName)
+			fmt.Print("Введите отчество (при наличии): ")
+			fmt.Scanln(&rec.MiddleName)
 			fmt.Print("Введите адрес: ")
 			fmt.Scanln(&rec.Address)
 			fmt.Print("Введите номер телефона: ")
@@ -64,9 +64,9 @@ func connentToServer() {
 			fmt.Print("Введите имя: ")
 			fmt.Scanln(&rec.Name)
 			fmt.Print("Введите фамилию: ")
-			fmt.Scanln(&rec.MiddleName)
-			fmt.Print("Введите отчество: ")
 			fmt.Scanln(&rec.LastName)
+			fmt.Print("Введите отчество: ")
+			fmt.Scanln(&rec.MiddleName)
 			fmt.Print("Введите адрес: ")
 			fmt.Scanln(&rec.Address)
 			updateRecord(rec)
@@ -84,9 +84,9 @@ func connentToServer() {
 			fmt.Print("Имя: ")
 			fmt.Scanln(&rec.Name)
 			fmt.Print("Фамилия: ")
-			fmt.Scanln(&rec.MiddleName)
-			fmt.Print("Отчество: ")
 			fmt.Scanln(&rec.LastName)
+			fmt.Print("Отчество: ")
+			fmt.Scanln(&rec.MiddleName)
 			fmt.Print("Адрес: ")
 			fmt.Scanln(&rec.Address)
 			fmt.Print("Номер телефона: ")
@@ -125,7 +125,7 @@ func createRecord(rec *Record) {
 	}
 	defer resp.Body.Close()
 
-	recordsData := make([]byte, resp.ContentLength) 
+	recordsData := make([]byte, resp.ContentLength)
 	_, err = io.ReadFull(resp.Body, recordsData)
 	if err != nil {
 		log.Println("io.ReadFull(resp.Body, recordsData):", err)
@@ -159,7 +159,7 @@ func updateRecord(rec *Record) {
 		return
 	}
 	defer resp.Body.Close()
-	recordsData := make([]byte, resp.ContentLength) 
+	recordsData := make([]byte, resp.ContentLength)
 	_, err = io.ReadFull(resp.Body, recordsData)
 	if err != nil {
 		log.Println("io.ReadFull(resp.Body, recordsData):", err)
@@ -188,7 +188,7 @@ func deleteRecord(phone []byte) {
 	}
 	defer resp.Body.Close()
 
-	recordsData := make([]byte, resp.ContentLength) 
+	recordsData := make([]byte, resp.ContentLength)
 	_, err = io.ReadFull(resp.Body, recordsData)
 	if err != nil {
 		log.Println("io.ReadFull(resp.Body, recordsData):", err)
@@ -215,7 +215,7 @@ func getRecords(rec *Record) {
 		log.Println("Error encoding JSON:", err)
 		return
 	}
-	
+
 	resp, err := http.Post("http://localhost:8080/get", "application/json", bytes.NewBuffer(jsonData))
 	if err != nil {
 		log.Println("Error sending POST request:", err)
@@ -223,7 +223,7 @@ func getRecords(rec *Record) {
 	}
 	defer resp.Body.Close()
 
-	recordsData := make([]byte, resp.ContentLength) 
+	recordsData := make([]byte, resp.ContentLength)
 	_, err = io.ReadFull(resp.Body, recordsData)
 	if err != nil {
 		log.Println("io.ReadFull(resp.Body, recordsData):", err)
